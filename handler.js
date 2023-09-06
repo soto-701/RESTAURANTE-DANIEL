@@ -3,17 +3,17 @@ const querystring = require("querystring")
 const mysql=require('mysql');
 const connection=mysql.createConnection({
   host:'proyectofinal-daniel.cywrvdmfoq84.us-east-2.rds.amazonaws.com',
-  user:'admin ',
+  user:'admin',
   port:'3306',
-  pasword:'12345678 ',
-  database:' Restaurante-DanielSotoDB',
+  password:'12345678',
+  database:'Restaurante',
 });
 
 module.exports.hacerPedido = async (event) => {
-  const pedido = querystring.parse(event["body"])
+  const pedidos = querystring.parse(event["body"])
   await new Promise((resolve, reject) => {
-  const queryclient = "CALL insert_pedido(?,?,?,?,?);";
-    connection.query(queryclient,pedido,descripcion, (err, results) => {
+  const queryclient = "CALL insert_Pedidos(?,?,?,?,?);";
+  connection.query(queryclient,[pedidos.producto_id,pedidos.cantidad_und,pedidos.valorUnidad,pedidos.valorTotal,pedidos.cliente_id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -26,11 +26,11 @@ module.exports.hacerPedido = async (event) => {
     body: JSON.stringify(
       {
         message: "exitoso",
-        cliente_id: pedido.cliente_id,
-        producto_id: pedido.producto_id,
-        cantidad_und: pedido.cantidad_und,
-        valorUnidad: pedido.valorUnidad,
-        valorTotal: pedido.valorTotal,  
+        cliente_id: pedidos.cliente_id,
+        producto_id: pedidos.producto_id,
+        cantidad_und: pedidos.cantidad_und,
+        valorUnidad: pedidos.valorUnidad,
+        valorTotal: pedidos.valorTotal,  
       },
       null,
       2
