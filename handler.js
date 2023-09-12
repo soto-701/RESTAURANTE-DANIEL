@@ -1,4 +1,5 @@
 'use strict';
+const querystring = require('aws-sdk');
 const querystring = require("querystring")
 const mysql=require('mysql');
 const connection=mysql.createConnection({
@@ -21,6 +22,36 @@ module.exports.hacerPedido = async (event) => {
       }
     });
   });
+  const messageBody = {
+    Cliente: pedido.cliente_id,
+    Producto: pedido.producto_id,
+    Cantidad: pedido.cantidad,
+    "Valor Total": pedido.valor_total,
+  };
+     // Parámetros del mensaje
+     const params = {
+      MessageBody: JSON.stringify(messageBody),
+      QueueUrl: 'https://sqs.us-east-2.amazonaws.com/667168568942/order-queue',
+    };
+  
+  await sqs.sendMessage(params).promise();
+  const paramsEmail = {
+    Source: "daniel.salazar27769@ucaldas.edu.co",
+    Destination: {
+      ToAddresses: [clienteEmail],
+    },
+    Message: {
+      Subject: {
+        Data: "Descripcion del pedido",
+      },
+      Body: {
+        Text: {
+          Data: `Descripcion del pedido:\n\nCliente: ${clienteNombre}\nProducto: ${producto_nombre}\nValor unitario: ${producto_valor}\nCantidad: ${pedido.cantidad}\nValor Total: ${pedido.valor_total}`,
+        },
+      },
+    },
+  };
+  await ses.sendEmail(paramsEmail).promise();
   return {
     statusCode: 200,
     body: JSON.stringify(
@@ -37,10 +68,8 @@ module.exports.hacerPedido = async (event) => {
     ),
   };
   connection.end();
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // return { message: 'Go Serverless v1.0! Your function executed successfully!', event };
-};
 
+};
 
 module.exports.obtenerPedido = async (event) => {
   const pedido = querystring.parse(event["body"])
@@ -66,8 +95,5 @@ module.exports.obtenerPedido = async (event) => {
       2
     ),
   };
-  
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // return { message: 'Go Serverless v1.0! Your function executed successfully!', event };
 };
 
